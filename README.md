@@ -35,6 +35,7 @@ Above snippet instructs _mqtt-launcher_ to:
 The payload value may be `None` in which case the eacho of the list elements
 defining the program and arguments are checked for the magic string `@!@` which
 is replaced by the payload contents. (See example published at `dev/2`, `dev/3` and `dev/4` below.)
+The topic name can be passed via `@T@` substitution.
 
 _mqtt-launcher_ publishes _stdout_ and _stderr_ of the launched program
 to the configured topic with `/report` added to it. So, in the example

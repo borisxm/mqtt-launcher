@@ -35,6 +35,7 @@ import sys
 import subprocess
 import logging
 import paho.mqtt.client as paho   # pip install paho-mqtt
+import re
 import time
 import socket
 import string
@@ -68,6 +69,11 @@ else:
 logging.info("Starting")
 logging.debug("DEBUG MODE")
 
+def mreplace(string, repl):
+    pattern = re.compile('|'.join([re.escape(r) for r in sorted(repl, key=len, reverse=True)]), flags=re.DOTALL)
+    return pattern.sub(lambda x: repl[x.group(0)], string)
+
+
 def runprog(desc, msg):
     topic = msg.topic
     param = str(msg.payload) if msg.payload is not None else None
@@ -82,8 +88,8 @@ def runprog(desc, msg):
     if param is not None and param in desc:
         cmd = desc.get(param)
     else:
-        if None in desc: ### and desc[None] is not None:
-            cmd = [p.replace('@!@', param) for p in desc[None]]
+        if None in desc:
+            cmd = [mreplace(p, {'@!@': param, '@T@': topic}) for p in desc[None]]
         else:
             logging.info("No matching param (%s) for %s" % (param, topic))
             return
