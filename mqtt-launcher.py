@@ -68,7 +68,10 @@ else:
 logging.info("Starting")
 logging.debug("DEBUG MODE")
 
-def runprog(topic, param=None):
+def runprog(desc, msg):
+    topic = msg.topic
+    param = str(msg.payload) if msg.payload is not None else None
+    logging.debug(topic + " " + str(msg.qos) + " " + param)
 
     publish = "%s/report" % topic
 
@@ -76,15 +79,11 @@ def runprog(topic, param=None):
         logging.debug("Param for topic %s is not printable; skipping" % (topic))
         return
 
-    if not topic in topiclist:
-        logging.info("Topic %s isn't configured" % topic)
-        return
-
-    if param is not None and param in topiclist[topic]:
-        cmd = topiclist[topic].get(param)
+    if param is not None and param in desc:
+        cmd = desc.get(param)
     else:
-        if None in topiclist[topic]: ### and topiclist[topic][None] is not None:
-            cmd = [p.replace('@!@', param) for p in topiclist[topic][None]]
+        if None in desc: ### and desc[None] is not None:
+            cmd = [p.replace('@!@', param) for p in desc[None]]
         else:
             logging.info("No matching param (%s) for %s" % (param, topic))
             return
@@ -100,15 +99,11 @@ def runprog(topic, param=None):
     (res, mid) =  mqttc.publish(publish, payload, qos=qos, retain=False)
 
 
-def on_message(mosq, userdata, msg):
-    logging.debug(msg.topic+" "+str(msg.qos)+" "+str(msg.payload))
-
-    runprog(msg.topic, str(msg.payload))
-
 def on_connect(mosq, userdata, flags, result_code):
     logging.debug("Connected to MQTT broker, subscribing to topics...")
-    for topic in topiclist:
-        mqttc.subscribe(topic, qos)
+    for t, d in topiclist.items():
+        mqttc.subscribe(t, qos)
+        mqttc.message_callback_add(t, lambda client, ud, msg, desc=d: runprog(desc, msg))
 
 
 def on_disconnect(mosq, userdata, rc):
@@ -130,7 +125,6 @@ if __name__ == '__main__':
     mqttc = paho.Client(clientid, clean_session=False)
 
 
-    mqttc.on_message = on_message
     mqttc.on_connect = on_connect
     mqttc.on_disconnect = on_disconnect
 
