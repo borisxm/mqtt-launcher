@@ -97,10 +97,18 @@ def runprog(desc, msg):
     logging.debug("Running t=%s: %s" % (topic, cmd))
 
     try:
-        res = subprocess.check_output(cmd, stdin=None, stderr=subprocess.STDOUT, shell=False, universal_newlines=True, cwd='/tmp')
+        p = subprocess.Popen(cmd,
+                             stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT,
+                             shell=False,
+                             universal_newlines=True,
+                             cwd='/tmp')
+        res, _ = p.communicate(param if param is not None and '@Pipe' in desc and desc['@Pipe'] else None)
     except Exception, e:
         res = "*****> %s" % str(e)
 
+    logging.debug("Command output: %s\n" % res)
     payload = res.rstrip('\n')
     (res, mid) =  mqttc.publish(publish, payload, qos=qos, retain=False)
 

@@ -34,4 +34,7 @@ topiclist = {
                                                       '-c',
                                                       'IFS="/" read -r var1 var2 <<< "@!@"; echo "var1=$var1 var2=$var2"'],
                             },
+    "dev/5"             :   {
+                                None            :   [ "/bin/cat" ], '@Pipe': True
+                            },
 }
